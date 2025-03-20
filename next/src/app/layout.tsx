@@ -16,10 +16,10 @@ const pacifico = Pacifico({
 });
 
 export const metadata: Metadata = {
-  title: "PiggyPal",
+  title: "MoneyFi",
   description: "Your personal financial advisor",
   icons: {
-    icon: "/piggypal.svg",
+    icon: "/moneyfi.svg",
   },
 };
 
