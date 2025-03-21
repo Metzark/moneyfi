@@ -4,10 +4,10 @@
   gap: 2rem;
   width: 100%;
   max-width: 40rem;
-  background: linear-gradient(135deg, var(--black) 30%, var(--black-light));
+  background: var(--background-gradient);
   padding: 2rem;
   border-radius: 1rem;
-  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow);
   margin: 1rem;
 }
 
@@ -27,10 +27,10 @@
   font-size: 1.4rem;
   border: none;
   border-radius: 0.5rem;
-  background: var(--black-light);
+  background: var(--black-light-light);
   color: var(--white);
   transition: border 0.3s ease;
-  border: 1px solid var(--black-light);
+  border: 1px solid var(--black-light-light);
 }
 
 .formGroup input:focus {
@@ -47,8 +47,8 @@
   cursor: pointer;
   transition: border 0.3s ease;
   font-weight: 500;
-  background: var(--black-light);
-  border: 1px solid var(--black-light);
+  background: var(--black-light-light);
+  border: 1px solid var(--black-light-light);
 }
 
 .form button:hover,

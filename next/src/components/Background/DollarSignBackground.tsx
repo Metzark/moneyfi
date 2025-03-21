@@ -1,9 +1,9 @@
 import React from "react";
 import styles from "./DollarSignBackground.module.css";
 
-const DollarSignBackground: React.FC = () => {
-  const dollarSigns = Array.from({ length: 64 }, (_, i) => "$");
+const dollarSigns: string[] = Array.from({ length: 64 }, (_, i) => "$");
 
+export default function DollarSignBackground() {
   return (
     <div className={styles.backgroundContainer}>
       {dollarSigns.map((sign, index) => (
@@ -13,6 +13,4 @@ const DollarSignBackground: React.FC = () => {
       ))}
     </div>
   );
-};
-
-export default DollarSignBackground;
+}

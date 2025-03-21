@@ -1,19 +1,9 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Inter, Pacifico } from "next/font/google";
 import Header from "@/components/Header/Header";
 import { SupabaseProvider } from "@/lib/supabase/context";
-import DollarSignBackground from "@/components/DollarSignBackground";
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
-
-const pacifico = Pacifico({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-pacifico",
-});
+import DollarSignBackground from "@/components/Background/DollarSignBackground";
+import { inter, pacifico } from "@/lib/fonts";
 
 export const metadata: Metadata = {
   title: "MoneyFi",

@@ -2,12 +2,15 @@
   font-size: 62.5%;
   --black: #181a20;
   --black-light: #252d31;
+  --black-light-light: #283135;
   --white: #e1e1e1;
   --red: #e83e56;
   --green: #69bc8e;
   --pink: #6bcbf1;
   --yellow: #f9ae30;
   --nav-height: 6rem;
+  --background-gradient: linear-gradient(135deg, var(--black) 30%, var(--black-light));
+  --shadow: 0 0 10px 0 rgba(0, 0, 0, 0.3);
 }
 
 html,

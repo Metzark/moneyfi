@@ -1,0 +1,177 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  background: var(--background-gradient);
+  box-shadow: var(--shadow);
+  border-radius: 1rem;
+  padding: 2rem;
+  margin: 1rem;
+  width: 100%;
+  max-width: 100rem;
+}
+
+.advisor {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 1rem;
+  align-items: center;
+}
+
+.advisor .avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.advisor .avatar img {
+  width: 125%;
+  height: 125%;
+}
+
+.advisor .description {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.advisor .description h3 {
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.advisor .description p {
+  font-size: 1.4rem;
+  font-weight: 400;
+}
+
+.input {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chats {
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-size: 1.4rem;
+  font-family: inherit;
+  color: var(--white);
+}
+
+.chats ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+  height: 50rem;
+}
+
+.chats .message {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--black-light-light);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.chats .message.user {
+  align-self: flex-end;
+}
+
+.chats .message.advisor {
+  align-self: flex-start;
+}
+
+.chats .message.advisor button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--green);
+}
+
+.input textarea {
+  resize: none;
+  border: none;
+  border-radius: 0.5rem;
+  background: var(--black-light-light);
+  border: 1px solid var(--black-light-light);
+  transition: border 0.3s ease;
+  color: var(--white);
+  padding: 1rem;
+  font-size: 1.4rem;
+  font-family: inherit;
+  color: var(--white);
+}
+
+.input textarea:focus {
+  outline: none;
+  border: 1px solid var(--green);
+}
+
+.input button {
+  background: var(--black-light-light);
+  border: 1px solid var(--black-light-light);
+  color: var(--white);
+  padding: 1rem;
+  font-size: 1.4rem;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  transition: border 0.3s ease;
+  font-weight: 500;
+}
+
+.input button:hover,
+.input button:focus {
+  outline: none;
+  border: 1px solid var(--green);
+}
+
+@media (max-width: 37.5em) {
+  .advisor .avatar {
+    width: 6rem;
+    height: 6rem;
+  }
+
+  .advisor .description h3 {
+    font-size: 1.6rem;
+  }
+
+  .advisor .description p {
+    font-size: 1.2rem;
+  }
+
+  .chats {
+    padding: 1rem;
+  }
+
+  .input textarea {
+    padding: 0.5rem;
+  }
+
+  .input button {
+    padding: 0.5rem;
+  }
+
+  .chats .message {
+    font-size: 1.2rem;
+    padding: 0.5rem;
+  }
+
+  .input textarea {
+    font-size: 1.2rem;
+  }
+
+  .input button {
+    font-size: 1.2rem;
+  }
+}
