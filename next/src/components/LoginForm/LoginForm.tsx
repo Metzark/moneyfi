@@ -1,7 +1,6 @@
 "use client";
 import styles from "./LoginForm.module.css";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function LoginForm({ isSignup = false }: { isSignup?: boolean }) {
@@ -9,8 +8,6 @@ export default function LoginForm({ isSignup = false }: { isSignup?: boolean }) 
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement> | null, test: boolean = false) => {
     try {
