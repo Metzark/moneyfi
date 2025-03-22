@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 resource "aws_lightsail_instance" "moneyfi-nextjs" {
-  name              = "moneyfi"
+  name              = "moneyfi-${timestamp()}"
   availability_zone = "us-east-2a"
   blueprint_id      = "ubuntu_20_04"
   bundle_id         = "nano_2_0"
