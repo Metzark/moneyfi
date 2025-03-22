@@ -1,16 +1,35 @@
-name: Run Sqitch
+name: Manual Sqitch Deployment
 
 on:
   workflow_dispatch:
     inputs:
+      target:
+        description: "Sqitch target (e.g., db:pg://user@host/dbname)"
+        required: true
+        default: "db:pg://postgres@localhost/app_db"
       command:
-        description: "Sqitch command to run (e.g. deploy, verify, revert)"
+        description: "Sqitch command to run (deploy, verify, revert, etc)"
         required: true
         default: "deploy"
 
 jobs:
   sqitch:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout code
@@ -19,26 +38,19 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y sqitch libpq-dev postgresql-client dnsutils
+          sudo apt-get install -y sqitch libpq-dev postgresql-client
 
-      - name: Run Sqitch command with forced IPv4
-        working-directory: ./supa/sqitch
-        env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_HOST: ${{ secrets.DB_HOST }}
+      - name: Wait for PostgreSQL
         run: |
-          set -e
+          until pg_isready -h localhost -p 5432; do
+            echo "Waiting for DB..."
+            sleep 2
+          done
 
-          echo "Resolving IPv4 for $DB_HOST..."
-          DB_IPV4=$(dig +short A "$DB_HOST" | head -n 1)
-
-          if [ -z "$DB_IPV4" ]; then
-            echo "Could not resolve IPv4 address for $DB_HOST"
-            exit 1
-          fi
-
-          export SQITCH_TARGET="db:pg://${DB_USER}:${DB_PASSWORD}@${DB_IPV4}/${DB_NAME}?host=${DB_HOST}"
-          echo "Running: sqitch ${{ github.event.inputs.command }} $SQITCH_TARGET"
-          sqitch ${{ github.event.inputs.command }} "$SQITCH_TARGET"
+      - name: Run Sqitch command
+        env:
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: |
+          echo "Running: sqitch ${{ github.event.inputs.command }} ${{ github.event.inputs.target }}"
+          sqitch ${{ github.event.inputs.command }} ${{ github.event.inputs.target }
