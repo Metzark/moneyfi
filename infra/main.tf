@@ -2,7 +2,7 @@ provider "aws" {
   region = "us-east-2"
 }
 
-resource "aws_lightsail_instance" "moneyfi" {
+resource "aws_lightsail_instance" "moneyfi-nextjs" {
   name              = "moneyfi"
   availability_zone = "us-east-2a"
   blueprint_id      = "ubuntu_20_04"
@@ -10,6 +10,5 @@ resource "aws_lightsail_instance" "moneyfi" {
   key_pair_name     = "moneyfi"
 
   tags = {
-    Name = "moneyfi"
   }
 }
