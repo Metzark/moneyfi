@@ -40,9 +40,6 @@ export default function LoginForm({ isSignup = false }: { isSignup?: boolean }) 
       if (data.error) {
         setError(data.error);
       }
-
-      router.refresh();
-      router.push("/");
     } catch (err) {
       console.error(err);
       if (err instanceof Error) {
