@@ -38,7 +38,7 @@
   border: 1px solid var(--green);
 }
 
-.form button {
+.form .submit {
   padding: 1rem;
   border: none;
   border-radius: 0.5rem;
@@ -51,8 +51,8 @@
   border: 1px solid var(--black-light-light);
 }
 
-.form button:hover,
-.form button:focus {
+.form .submit:hover,
+.form .submit:focus {
   outline: none;
   border: 1px solid var(--green);
 }
@@ -68,11 +68,22 @@
   font-weight: 500;
 }
 
+.link button {
+  font-size: 1.4rem;
+  font-weight: 500;
+  font-family: inherit;
+  background: none;
+  border: none;
+  color: var(--green);
+  cursor: pointer;
+}
+
 .link a {
   color: var(--green);
   cursor: pointer;
 }
 
-.link a:hover {
+.link a:hover,
+.link button:hover {
   text-decoration: underline;
 }

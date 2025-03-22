@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
-type LoginData = {
+type LoginRequest = {
   email: string;
   password: string;
 };
@@ -15,8 +15,10 @@ type LoginResponse = {
 export async function POST(req: Request) {
   const supabase: SupabaseClient = await createClient();
 
-  const data: LoginData = await req.json();
+  // Get login data from request
+  const data: LoginRequest = await req.json();
 
+  // Login user
   const { error }: { error: Error | null } = await supabase.auth.signInWithPassword(data);
 
   const response: LoginResponse = {
@@ -24,5 +26,9 @@ export async function POST(req: Request) {
     success: !Boolean(error),
   };
 
-  return NextResponse.json(response, { status: response.success ? 200 : 500 });
+  if (!response.success) {
+    return NextResponse.json(response, { status: 500 });
+  }
+
+  return NextResponse.redirect(new URL("/", req.url));
 }

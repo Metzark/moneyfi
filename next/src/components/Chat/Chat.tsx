@@ -7,12 +7,16 @@ import Message from "../Message/Message";
 import { useState } from "react";
 
 export default function Chat() {
+  // Get the next advisor
   const { advisor, nextAdvisor, error } = useAdvisors();
+
+  // Get the messages for the current advisor
   const messages = useMessages(advisor);
 
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Handle sending a message
   const handleSend = async () => {
     if (!message) return;
 

@@ -6,6 +6,7 @@ export default async function Login() {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
 
+  // If user is logged in, redirect to home page
   if (data?.user) {
     redirect("/");
   }

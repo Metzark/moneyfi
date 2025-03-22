@@ -10,6 +10,7 @@ export default function HeaderLinks() {
 
   const router = useRouter();
 
+  // Handle logging the user out
   const handleLogout = async () => {
     const { error }: { error: Error | null } = await supabase.auth.signOut();
     if (error) {

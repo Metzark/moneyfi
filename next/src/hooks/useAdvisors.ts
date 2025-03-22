@@ -8,10 +8,12 @@ export function useAdvisors() {
   const [idx, setIdx] = useState(0);
   const { supabase } = useSupabase();
 
+  // Get the next advisor (circularly)
   const nextAdvisor = useCallback(() => {
     setIdx((prev) => (prev + 1) % advisors.length);
   }, [advisors]);
 
+  // Fetch the available advisors
   useEffect(() => {
     const fetchAdvisors = async () => {
       const { data, error }: AdvisorsResponse = await supabase.from("advisors").select();

@@ -12,11 +12,11 @@ export default function LoginForm({ isSignup = false }: { isSignup?: boolean }) 
 
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement> | null, test: boolean = false) => {
     try {
-      e.preventDefault();
+      e?.preventDefault();
 
-      if (!email || !password) {
+      if (!test && (!email || !password)) {
         setError("Please enter an email and password");
         return;
       }
@@ -24,10 +24,16 @@ export default function LoginForm({ isSignup = false }: { isSignup?: boolean }) 
       setError("");
       setIsLoading(true);
 
-      const res = await fetch(`/api/${isSignup ? "signup" : "login"}`, {
+      const res = await fetch(`/api/${isSignup || test ? "signup" : "login"}`, {
         method: "POST",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, test }),
       });
+
+      // Check if response is a redirect
+      if (res.redirected) {
+        window.location.href = res.url;
+        return;
+      }
 
       const data = await res.json();
 
@@ -35,8 +41,10 @@ export default function LoginForm({ isSignup = false }: { isSignup?: boolean }) 
         setError(data.error);
       }
 
+      router.refresh();
       router.push("/");
     } catch (err) {
+      console.error(err);
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -71,12 +79,18 @@ export default function LoginForm({ isSignup = false }: { isSignup?: boolean }) 
         />
       </div>
       <p className={styles.error}>{error}</p>
-      <button type="submit" aria-label="login" disabled={isLoading}>
+      <button className={styles.submit} type="submit" aria-label="login" disabled={isLoading}>
         Go
       </button>
       <p className={styles.link}>
         {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
         <Link href={isSignup ? "/login" : "/signup"}>{isSignup ? "Login" : "Sign up"}</Link>
+      </p>
+      <p className={styles.link}>
+        Use a test account?{" "}
+        <button type="button" onClick={() => handleSubmit(null, true)}>
+          Test
+        </button>
       </p>
     </form>
   );

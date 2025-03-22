@@ -3,7 +3,7 @@ import { Message as MessageType } from "@/types/types";
 import { useState, useRef, useEffect } from "react";
 
 export default function Message({ message }: { message: MessageType }) {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(message.auto_play || false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export default function Message({ message }: { message: MessageType }) {
       audioRef.current.addEventListener("play", () => setIsPlaying(true));
     }
 
-    // Cleanup
+    // Cleanup audio stuff
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -29,6 +29,16 @@ export default function Message({ message }: { message: MessageType }) {
     };
   }, [message.audio_url]);
 
+  // Auto play when message.auto_play is true (on new advisor message)
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    if (message.auto_play) {
+      audioRef.current.play();
+    }
+  }, [message.auto_play]);
+
+  // Handle playing/pausing the audio
   const handlePlay = () => {
     if (!audioRef.current) return;
 

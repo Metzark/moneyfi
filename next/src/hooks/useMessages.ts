@@ -6,23 +6,35 @@ export function useMessages(advisor: Advisor | null) {
   const { supabase } = useSupabase();
   const [messages, setMessages] = useState<Message[]>([]);
 
-  const handleMessages = useCallback(async () => {
-    if (!advisor) return;
+  // Handle fetching messages
+  const handleMessages = useCallback(
+    async (e: any) => {
+      if (!advisor) return;
 
-    const { data, error } = await supabase
-      .from("messages")
-      .select("id, message, from_user, audio_url")
-      .eq("advisor_id", advisor?.id)
-      .order("created_at", { ascending: true })
-      .limit(10);
+      const { data, error } = await supabase
+        .from("messages")
+        .select("id, message, from_user, audio_url")
+        .eq("advisor_id", advisor?.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
 
-    if (error) {
-      console.error(error);
-    } else {
-      setMessages(data);
-    }
-  }, [supabase, advisor]);
+      if (error) {
+        console.error(error);
+      } else {
+        const newMessages = data.map((message) => ({ ...message, auto_play: false })).reverse();
+        const lastMessage = newMessages.length > 0 ? newMessages[newMessages.length - 1] : null;
 
+        if (lastMessage?.audio_url && lastMessage.id === e?.new.id) {
+          lastMessage.auto_play = true;
+        }
+
+        setMessages(newMessages);
+      }
+    },
+    [supabase, advisor]
+  );
+
+  // Handle subscribing to messages
   useEffect(() => {
     const channel = supabase
       .channel("messages")
@@ -43,8 +55,9 @@ export function useMessages(advisor: Advisor | null) {
     };
   }, [supabase, advisor, handleMessages]);
 
+  // Handle fetching messages initially or when advisor changes
   useEffect(() => {
-    handleMessages();
+    handleMessages(null);
   }, [handleMessages]);
 
   return messages;

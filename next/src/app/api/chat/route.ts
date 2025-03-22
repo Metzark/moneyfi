@@ -34,13 +34,13 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: messageError.message }, { status: 500 });
   }
 
-  // Get last 5 messages for this user and advisor
+  // Get last 8 (and the one we just sent) messages for this user and advisor
   const { data: previousMessages, error: historyError } = await supabase
     .from("messages")
     .select("*")
     .eq("user_id", data.user.id)
     .eq("advisor_id", advisor_id)
-    .order("created_at", { ascending: true })
+    .order("created_at", { ascending: false })
     .limit(9);
 
   if (historyError) {
@@ -68,7 +68,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   });
 
   const completion = await openai.chat.completions.create({
-    messages: messages,
+    messages: messages.reverse(),
     model: "gpt-4o-mini",
   });
 
