@@ -1,0 +1,33 @@
+.message {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--black-light-light);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.message.user {
+  align-self: flex-end;
+}
+
+.message.advisor {
+  align-self: flex-start;
+}
+
+.message.advisor button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--green);
+}
+
+@media (max-width: 37.5em) {
+  .message {
+    font-size: 1.2rem;
+    padding: 0.5rem;
+  }
+}

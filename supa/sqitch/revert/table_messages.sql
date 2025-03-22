@@ -2,6 +2,8 @@
 
 BEGIN;
 
+ALTER publication supabase_realtime DROP TABLE public.messages;
+
 DROP TABLE IF EXISTS public.messages;
 
 COMMIT;

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
 
 type LoginData = {
   email: string;
@@ -23,5 +24,5 @@ export async function POST(req: Request) {
     success: !Boolean(error),
   };
 
-  return new Response(JSON.stringify(response), { status: response.success ? 200 : 500 });
+  return NextResponse.json(response, { status: response.success ? 200 : 500 });
 }
