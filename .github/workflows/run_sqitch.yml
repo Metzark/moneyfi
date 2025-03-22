@@ -21,6 +21,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y sqitch libpq-dev postgresql-client
 
+      - name: Show Sqitch target (without password)
+        run: |
+          echo "Sqitch target: db:pg://${{ secrets.DB_USER }}@${{ secrets.DB_HOST }}:5432/${{ secrets.DB_NAME }}"
+
       - name: Run Sqitch command
         working-directory: ./supa/sqitch
         env:
