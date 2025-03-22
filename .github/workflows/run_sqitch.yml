@@ -1,22 +1,44 @@
-- name: Run Sqitch
-  working-directory: ./supa/sqitch
-  env:
-    DB_USER: ${{ secrets.DB_USER }}
-    DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-    DB_NAME: ${{ secrets.DB_NAME }}
-    DB_HOST: ${{ secrets.DB_HOST }}
-  run: |
-    set -e
+name: Run Sqitch
 
-    # Resolve IPv4 address from Supabase hostname
-    IP=$(dig +short A "$DB_HOST" | head -n 1)
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "Sqitch command to run (e.g. deploy, verify, revert)"
+        required: true
+        default: "deploy"
 
-    if [ -z "$IP" ]; then
-      echo "Failed to resolve IPv4 for $DB_HOST"
-      exit 1
-    fi
+jobs:
+  sqitch:
+    runs-on: ubuntu-latest
 
-    TARGET="db:pg://$DB_USER:$DB_PASSWORD@$IP/$DB_NAME?host=$DB_HOST"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    echo "Using target: $TARGET"
-    sqitch ${{ github.event.inputs.command }} "$TARGET"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sqitch libpq-dev postgresql-client dnsutils
+
+      - name: Run Sqitch command with forced IPv4
+        working-directory: ./supa/sqitch
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+        run: |
+          set -e
+
+          echo "Resolving IPv4 for $DB_HOST..."
+          DB_IPV4=$(dig +short A "$DB_HOST" | head -n 1)
+
+          if [ -z "$DB_IPV4" ]; then
+            echo "Could not resolve IPv4 address for $DB_HOST"
+            exit 1
+          fi
+
+          export SQITCH_TARGET="db:pg://${DB_USER}:${DB_PASSWORD}@${DB_IPV4}/${DB_NAME}?host=${DB_HOST}"
+          echo "Running: sqitch ${{ github.event.inputs.command }} $SQITCH_TARGET"
+          sqitch ${{ github.event.inputs.command }} "$SQITCH_TARGET"
