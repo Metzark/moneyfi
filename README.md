@@ -62,6 +62,7 @@ Fill out environment file
 NEXT_PUBLIC_SUPABASE_URL='http://127.0.0.1:54321'
 NEXT_PUBLIC_SUPABASE_ANON_KEY='' # Found in the Supabase dashboard
 OPENAI_API_KEY=''
+ELEVENLABS_API_KEY=''
 ```
 
 Run in dev mode

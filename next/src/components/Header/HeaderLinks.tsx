@@ -3,11 +3,11 @@
 import styles from "./HeaderLinks.module.css";
 import { useSupabase } from "@/lib/supabase/context";
 import { SupabaseClient, User } from "@supabase/supabase-js";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function HeaderLinks() {
   const { user, supabase }: { user: User | null; supabase: SupabaseClient } = useSupabase();
+
   const router = useRouter();
 
   const handleLogout = async () => {

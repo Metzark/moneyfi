@@ -14,4 +14,5 @@ export type Message = {
   id: string;
   message: string;
   from_user: boolean;
+  audio_url?: string;
 };

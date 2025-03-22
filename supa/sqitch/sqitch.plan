@@ -6,3 +6,4 @@ table_messages 2025-03-21T01:59:17Z ,,, <metzark@MetzarkPC> # Added messages tab
 bucket_advisor_images 2025-03-21T02:02:03Z ,,, <metzark@MetzarkPC> # Added advisor images bucket
 seed_advisors 2025-03-22T02:54:01Z ,,, <metzark@MetzarkPC> # Added advisors seed data
 rls_messages 2025-03-22T03:50:44Z ,,, <metzark@MetzarkPC> # Added row-level security for messages table
+bucket_advisor_audio 2025-03-22T05:22:34Z ,,, <metzark@MetzarkPC> # Added bucket for advisor audio

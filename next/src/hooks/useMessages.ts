@@ -11,7 +11,7 @@ export function useMessages(advisor: Advisor | null) {
 
     const { data, error } = await supabase
       .from("messages")
-      .select("id, message, from_user")
+      .select("id, message, from_user, audio_url")
       .eq("advisor_id", advisor?.id)
       .order("created_at", { ascending: true })
       .limit(10);

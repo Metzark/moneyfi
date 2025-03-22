@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { openai } from "@/lib/openai/client";
+import { elevenLabs } from "@/lib/elevenlabs/client";
 import { NextResponse } from "next/server";
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
@@ -73,11 +74,43 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   const assistantMessage = completion.choices[0].message.content;
 
+  if (!assistantMessage) {
+    return NextResponse.json({ error: "No assistant message" }, { status: 500 });
+  }
+
+  const audio = await elevenLabs.textToSpeech.convert(advisor.elevenlabs_voice_id, {
+    text: assistantMessage,
+  });
+
+  // Convert stream to buffer
+  const chunks: Uint8Array[] = [];
+  for await (const chunk of audio) {
+    chunks.push(chunk);
+  }
+  const buffer = Buffer.concat(chunks);
+
+  const { data: audioData, error: audioError } = await supabase.storage
+    .from("advisor_audio")
+    .upload(`${data.user.id}-${advisor_id}-${Date.now()}.mp3`, buffer, {
+      contentType: "audio/mpeg",
+      cacheControl: "3600",
+    });
+
+  if (audioError) {
+    return NextResponse.json({ error: audioError.message }, { status: 500 });
+  }
+
+  // Get the public URL for the audio
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("advisor_audio").getPublicUrl(audioData?.path || "");
+
   const { error: assistantMessageError } = await supabase.from("messages").insert({
     advisor_id: advisor_id,
     user_id: data.user.id,
     message: assistantMessage,
     from_user: false,
+    audio_url: publicUrl,
   });
 
   if (assistantMessageError) {
