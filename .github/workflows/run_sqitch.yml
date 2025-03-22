@@ -1,34 +1,22 @@
-name: Run Sqitch
+- name: Run Sqitch
+  working-directory: ./supa/sqitch
+  env:
+    DB_USER: ${{ secrets.DB_USER }}
+    DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+    DB_NAME: ${{ secrets.DB_NAME }}
+    DB_HOST: ${{ secrets.DB_HOST }}
+  run: |
+    set -e
 
-on:
-  workflow_dispatch:
-    inputs:
-      command:
-        description: "Sqitch command to run (deploy, verify, revert, etc)"
-        required: true
-        default: "deploy"
+    # Resolve IPv4 address from Supabase hostname
+    IP=$(dig +short A "$DB_HOST" | head -n 1)
 
-jobs:
-  sqitch:
-    runs-on: ubuntu-latest
+    if [ -z "$IP" ]; then
+      echo "Failed to resolve IPv4 for $DB_HOST"
+      exit 1
+    fi
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    TARGET="db:pg://$DB_USER:$DB_PASSWORD@$IP/$DB_NAME?host=$DB_HOST"
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y sqitch libpq-dev postgresql-client
-
-      - name: Show Sqitch target (without password)
-        run: |
-          echo "Sqitch target: db:pg://${{ secrets.DB_USER }}@${{ secrets.DB_HOST }}:5432/${{ secrets.DB_NAME }}"
-
-      - name: Run Sqitch command
-        working-directory: ./supa/sqitch
-        env:
-          SQITCH_TARGET: db:pg://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:5432/${{ secrets.DB_NAME }}
-        run: |
-          echo "Running: sqitch ${{ github.event.inputs.command }} $SQITCH_TARGET"
-          sqitch ${{ github.event.inputs.command }} $SQITCH_TARGET
+    echo "Using target: $TARGET"
+    sqitch ${{ github.event.inputs.command }} "$TARGET"
