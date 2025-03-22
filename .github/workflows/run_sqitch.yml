@@ -1,0 +1,30 @@
+name: Run Sqitch
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "Sqitch command to run (deploy, verify, revert, etc)"
+        required: true
+        default: "deploy"
+
+jobs:
+  sqitch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sqitch libpq-dev postgresql-client
+
+      - name: Run Sqitch command
+        working-directory: ./supa/sqitch
+        env:
+          SQITCH_TARGET: db:pg://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:5432/${{ secrets.DB_NAME }}
+        run: |
+          echo "Running: sqitch ${{ github.event.inputs.command }} $SQITCH_TARGET"
+          sqitch ${{ github.event.inputs.command }} $SQITCH_TARGET
