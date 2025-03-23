@@ -2,12 +2,13 @@
 import styles from "./LoginForm.module.css";
 import Link from "next/link";
 import { useState } from "react";
-
+import { useRouter } from "next/navigation";
 export default function LoginForm({ isSignup = false }: { isSignup?: boolean }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement> | null, test: boolean = false) => {
     try {
@@ -35,8 +36,11 @@ export default function LoginForm({ isSignup = false }: { isSignup?: boolean }) 
       const data = await res.json();
 
       if (data.error) {
-        setError(data.error);
+        throw new Error(data.error);
       }
+
+      // Redirect to home page
+      router.push("/");
     } catch (err) {
       console.error(err);
       if (err instanceof Error) {
