@@ -41,6 +41,7 @@ export default function LoginForm({ isSignup = false }: { isSignup?: boolean }) 
 
       // Redirect to home page
       router.push("/");
+      window.location.href = "/";
     } catch (err) {
       console.error(err);
       if (err instanceof Error) {
