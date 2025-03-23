@@ -4,6 +4,12 @@ An AI financial advising service
 
 ## Development
 
+### Requirments
+
+- [Docker](https://www.docker.com/) - Container platform for running Supabase locally
+- [Node.js](https://nodejs.org/) - JavaScript runtime environment (or use [nvm](https://github.com/nvm-sh/nvm))
+- [Sqitch](https://sqitch.org/) - Database change management tool
+
 ### Running Supabase Locally
 
 Change directory into /supa
