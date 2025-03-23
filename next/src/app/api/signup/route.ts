@@ -47,5 +47,5 @@ export async function POST(req: Request) {
     return NextResponse.json(response, { status: 500 });
   }
 
-  return NextResponse.redirect(new URL("/", req.url));
+  return NextResponse.json(response, { status: 200 });
 }
