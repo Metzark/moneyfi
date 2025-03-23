@@ -31,8 +31,8 @@ export async function POST(req: Request) {
 
   // If test is true, use test email and password (basically a one time use email and password for testing)
   if (data.test) {
-    signupData.email = `test_${Math.random()}@test.com`;
-    signupData.password = `test_${Math.random()}`;
+    signupData.email = `test_${Math.floor(Math.random() * 1000000)}@test.com`;
+    signupData.password = `test_${Math.floor(Math.random() * 1000000)}`;
   }
 
   // Sign the user up
