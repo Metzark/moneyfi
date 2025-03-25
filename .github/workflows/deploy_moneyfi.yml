@@ -24,8 +24,10 @@ jobs:
         run: |
           ssh ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }} << 'EOF'
             cd moneyfi
-            git pull
+            git fetch origin
+            git checkout production
+            git pull origin production
             cd next
-            npm run build
-            pm2 restart all
+            /home/ubuntu/.nvm/versions/node/v23.10.0/bin/npm run build
+            /home/ubuntu/.nvm/versions/node/v23.10.0/bin/pm2 restart all
           EOF
