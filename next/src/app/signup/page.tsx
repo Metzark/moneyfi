@@ -7,7 +7,7 @@ export default async function Login() {
 
   // If user is logged in, redirect to home page
   if (data?.user) {
-    redirect("/");
+    redirect("/advice");
   }
 
   return (
