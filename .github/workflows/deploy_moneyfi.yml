@@ -1,4 +1,4 @@
-name: Deploy to Lightsail
+name: Build & Deploy to Lightsail
 
 on:
   push:
@@ -6,31 +6,50 @@ on:
       - production
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code (just for context, not used in SSH)
+      - name: Checkout source
         uses: actions/checkout@v3
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.LIGHTSAIL_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.LIGHTSAIL_HOST }} >> ~/.ssh/known_hosts
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "23"
 
-      - name: Deploy to Lightsail via SSH
+      - name: Install deps & build
+        working-directory: moneyfi/next
         run: |
-          ssh ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }} << 'EOF'
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm use 23.10.0
-            cd moneyfi
-            git fetch origin
-            git checkout production
-            git pull origin production
-            cd next
-            npm run build
-            /home/ubuntu/.nvm/versions/node/v23.10.0/bin/pm2 restart all
+          npm ci
+          npm run build
+
+      - name: Archive build
+        run: |
+          cd moneyfi/next
+          tar -czf next-build.tar.gz .next package.json package-lock.json public
+
+      - name: Upload build to Lightsail
+        run: |
+          echo "${{ secrets.LIGHTSAIL_SSH_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
+          scp -o StrictHostKeyChecking=no -i private_key.pem \
+            moneyfi/next/next-build.tar.gz \
+            ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }}:~/next-build.tar.gz
+
+      - name: Deploy on Lightsail
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key.pem \
+            ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }} << 'EOF'
+              export NVM_DIR="$HOME/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+              nvm use 23.10.0
+
+              mkdir -p ~/moneyfi/next
+              tar -xzf ~/next-build.tar.gz -C ~/moneyfi/next
+
+              cd ~/moneyfi/next
+              npm install --omit=dev
+              pm2 restart all
           EOF
