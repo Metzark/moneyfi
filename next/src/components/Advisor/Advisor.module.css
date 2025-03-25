@@ -1,0 +1,56 @@
+.advisorCard {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  background: var(--background-gradient);
+  box-shadow: var(--shadow);
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.advisorImageContainer {
+  justify-self: center;
+  overflow: hidden;
+  border-radius: 50%;
+  width: 10rem;
+  height: 10rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.advisorImageContainer img {
+  margin-top: 1.5rem;
+  width: 125%;
+  height: 125%;
+}
+
+.advisorContent {
+  padding: 2rem;
+  flex: 1;
+}
+
+.advisorContent h3 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.advisorContent h4 {
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.advisorContent p {
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+  font-size: 1.4rem;
+}
+
+@media (max-width: 37.5em) {
+  .advisorCard {
+    grid-template-columns: 1fr;
+  }
+
+  .advisorContent p {
+    font-size: 1.2rem;
+  }
+}

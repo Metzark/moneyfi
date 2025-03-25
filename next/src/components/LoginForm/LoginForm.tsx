@@ -40,8 +40,8 @@ export default function LoginForm({ isSignup = false }: { isSignup?: boolean }) 
       }
 
       // Redirect to home page
-      router.push("/");
-      window.location.href = "/";
+      router.push("/advice");
+      window.location.href = "/advice";
     } catch (err) {
       console.error(err);
       if (err instanceof Error) {
