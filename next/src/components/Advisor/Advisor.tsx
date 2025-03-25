@@ -11,13 +11,6 @@ export default function Advisor({ advisor }: any) {
         <h3>{advisor.name}</h3>
         <h4>{advisor.title}</h4>
         <p>{advisor.full_bio}</p>
-        {/* <div className={styles.specialties}>
-          {advisor.specialties.map((specialty: any) => (
-            <span key={specialty} className={styles.specialty}>
-              {specialty}
-            </span>
-          ))}
-        </div> */}
       </div>
     </div>
   );
