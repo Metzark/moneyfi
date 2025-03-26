@@ -33,5 +33,5 @@ jobs:
             cd next
             rm -rf .next
             npm run build
-            pm2 restart all
+            pm2 restart all || pm2 start "npm start"
           EOF
