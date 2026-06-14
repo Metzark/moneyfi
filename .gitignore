@@ -62,3 +62,6 @@
 # Cache
 **/.cache
 **/.eslintcache
+
+**/.nhost
+**/.secrets

@@ -1,0 +1,40 @@
+table:
+  name: advisors
+  schema: moneyfi
+array_relationships:
+  - name: messages
+    using:
+      foreign_key_constraint_on:
+        column: advisor_id
+        table:
+          name: messages
+          schema: moneyfi
+select_permissions:
+  - role: public
+    permission:
+      columns:
+        - created_at
+        - description
+        - elevenlabs_voice_id
+        - full_bio
+        - id
+        - image_url
+        - name
+        - persona
+        - updated_at
+      filter: {}
+    comment: ""
+  - role: user
+    permission:
+      columns:
+        - elevenlabs_voice_id
+        - image_url
+        - name
+        - id
+        - description
+        - full_bio
+        - persona
+        - created_at
+        - updated_at
+      filter: {}
+    comment: ""

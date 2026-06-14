@@ -1,0 +1,7 @@
+%syntax-version=1.0.0
+%project=moneyfi
+
+schema_moneyfi 2026-06-14T14:45:15Z ,,, <metzark@MetzarkPC> # Added moneyfi schema
+table_advisors 2025-03-21T01:59:03Z ,,, <metzark@MetzarkPC> # Added advisors table
+table_messages 2025-03-21T01:59:17Z ,,, <metzark@MetzarkPC> # Added messages table
+seed_advisors 2025-03-22T02:54:01Z ,,, <metzark@MetzarkPC> # Added advisors seed data
