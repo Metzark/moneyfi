@@ -2,50 +2,54 @@ import styles from "./Message.module.css";
 import { Message as MessageType } from "@/types/types";
 import { useState, useRef, useEffect } from "react";
 
+function safePlay(audio: HTMLAudioElement) {
+  void audio.play().catch((err: Error) => {
+    if (err.name !== "AbortError") {
+      console.error(err);
+    }
+  });
+}
+
 export default function Message({ message }: { message: MessageType }) {
-  const [isPlaying, setIsPlaying] = useState(message.auto_play || false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Create audio element when message has audio URL
-    if (message.audio_url && !audioRef.current) {
-      audioRef.current = new Audio(message.audio_url);
+    if (!message.audio_url) return;
 
-      // Add event listeners
-      audioRef.current.addEventListener("ended", () => setIsPlaying(false));
-      audioRef.current.addEventListener("pause", () => setIsPlaying(false));
-      audioRef.current.addEventListener("play", () => setIsPlaying(true));
-    }
+    const audio = new Audio(message.audio_url);
+    const onEnded = () => setIsPlaying(false);
+    const onPause = () => setIsPlaying(false);
+    const onPlay = () => setIsPlaying(true);
 
-    // Cleanup audio stuff
+    audio.addEventListener("ended", onEnded);
+    audio.addEventListener("pause", onPause);
+    audio.addEventListener("play", onPlay);
+    audioRef.current = audio;
+
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.removeEventListener("ended", () => setIsPlaying(false));
-        audioRef.current.removeEventListener("pause", () => setIsPlaying(false));
-        audioRef.current.removeEventListener("play", () => setIsPlaying(true));
+      audio.pause();
+      audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("play", onPlay);
+      if (audioRef.current === audio) {
         audioRef.current = null;
       }
     };
   }, [message.audio_url]);
 
-  // Auto play when message.auto_play is true (on new advisor message)
   useEffect(() => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || !message.auto_play) return;
+    safePlay(audioRef.current);
+  }, [message.auto_play, message.audio_url]);
 
-    if (message.auto_play) {
-      audioRef.current.play();
-    }
-  }, [message.auto_play]);
-
-  // Handle playing/pausing the audio
   const handlePlay = () => {
     if (!audioRef.current) return;
 
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play();
+      safePlay(audioRef.current);
     }
   };
 

@@ -15,16 +15,18 @@ export default function Chat() {
 
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sendError, setSendError] = useState("");
 
-  // Handle sending a message
   const handleSend = async () => {
-    if (!message) return;
+    if (!message || !advisor) return;
 
     try {
       setLoading(true);
+      setSendError("");
       const response = await fetch("/api/chat", {
         method: "POST",
-        body: JSON.stringify({ message: message, advisor_id: advisor?.id }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, advisor_id: advisor.id }),
       });
 
       const data = await response.json();
@@ -36,6 +38,9 @@ export default function Chat() {
       setMessage("");
     } catch (error) {
       console.error(error);
+      if (error instanceof Error) {
+        setSendError(error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -62,12 +67,19 @@ export default function Chat() {
           ))}
         </ul>
       </div>
+      {error && <p className={styles.error}>{error.message}</p>}
       <div className={styles.input}>
-        <textarea placeholder={`Chat with ${advisor?.name || "Tom"}...`} value={message} onChange={(e) => setMessage(e.target.value)} />
-        <button onClick={handleSend} disabled={loading}>
+        <textarea
+          placeholder={`Chat with ${advisor?.name || "Tom"}...`}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          disabled={!advisor || loading}
+        />
+        <button onClick={handleSend} disabled={loading || !advisor || !message}>
           {loading ? "Sending..." : "Send"}
         </button>
       </div>
+      {sendError && <p className={styles.error}>{sendError}</p>}
     </div>
   );
 }

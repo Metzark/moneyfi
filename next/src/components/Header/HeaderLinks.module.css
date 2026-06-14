@@ -4,7 +4,11 @@
   gap: 1rem;
 }
 
-.links button {
+.links form {
+  margin: 0;
+}
+
+.login {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -17,8 +21,9 @@
   border-radius: 0.5rem;
   border: 1px solid var(--black-light-light);
   box-shadow: var(--shadow);
+  text-decoration: none;
 }
 
-.links button:hover {
+.login:hover {
   border: 1px solid var(--green);
 }

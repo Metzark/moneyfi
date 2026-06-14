@@ -1,5 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
-import { SupabaseClient } from "@supabase/supabase-js";
+import { createNhostClient } from "@/lib/nhost/server";
+import type { ErrorResponse } from "@nhost/nhost-js/auth";
+import type { FetchError } from "@nhost/nhost-js/fetch";
 import { NextResponse } from "next/server";
 
 type SignupRequest = {
@@ -19,9 +20,6 @@ type SignupResponse = {
 };
 
 export async function POST(req: Request) {
-  const supabase: SupabaseClient = await createClient();
-
-  // Get signup data from request
   const data: SignupRequest = await req.json();
 
   const signupData: SignupData = {
@@ -29,23 +27,45 @@ export async function POST(req: Request) {
     password: data.password,
   };
 
-  // If test is true, use test email and password (basically a one time use email and password for testing)
   if (data.test) {
     signupData.email = `test_${Math.floor(Math.random() * 1000000)}@test.com`;
     signupData.password = `test_${Math.floor(Math.random() * 1000000)}`;
   }
 
-  // Sign the user up
-  const { error }: { error: Error | null } = await supabase.auth.signUp(signupData);
-
-  const response: SignupResponse = {
-    error: error ? error.message : null,
-    success: !Boolean(error),
-  };
-
-  if (!response.success) {
-    return NextResponse.json(response, { status: 500 });
+  if (!signupData.email || !signupData.password) {
+    const response: SignupResponse = {
+      error: "Email and password are required",
+      success: false,
+    };
+    return NextResponse.json(response, { status: 400 });
   }
 
-  return NextResponse.json(response, { status: 200 });
+  try {
+    const nhost = await createNhostClient();
+    const res = await nhost.auth.signUpEmailPassword({
+      email: signupData.email,
+      password: signupData.password,
+    });
+
+    if (res.body.session) {
+      const response: SignupResponse = {
+        error: null,
+        success: true,
+      };
+      return NextResponse.json(response, { status: 200 });
+    }
+
+    const response: SignupResponse = {
+      error: "Account created. Please check your email to verify your account before signing in.",
+      success: false,
+    };
+    return NextResponse.json(response, { status: 200 });
+  } catch (err) {
+    const error = err as FetchError<ErrorResponse>;
+    const response: SignupResponse = {
+      error: error.message,
+      success: false,
+    };
+    return NextResponse.json(response, { status: error.status || 500 });
+  }
 }

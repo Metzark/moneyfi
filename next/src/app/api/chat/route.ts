@@ -1,74 +1,103 @@
-import { createClient } from "@/lib/supabase/server";
+import { createNhostClient } from "@/lib/nhost/server";
+import { GET_ADVISOR, GET_MESSAGE_HISTORY, INSERT_MESSAGE, getGraphQLError } from "@/lib/nhost/graphql";
 import { openai } from "@/lib/openai/client";
-import { elevenLabs } from "@/lib/elevenlabs/client";
+import { textToSpeech } from "@/lib/elevenlabs/client";
 import { NextResponse } from "next/server";
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
+type AdvisorRow = {
+  id: number;
+  name: string;
+  persona: string;
+  elevenlabs_voice_id: string;
+};
+
+type MessageRow = {
+  id: string;
+  message: string;
+  from_user: boolean;
+};
+
 export async function POST(req: Request): Promise<NextResponse> {
-  const supabase = await createClient();
+  const nhost = await createNhostClient();
+  const session = nhost.getUserSession();
 
-  const { data, error } = await supabase.auth.getUser();
-
-  if (!data.user) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized", success: false }, { status: 401 });
   }
 
-  if (error) {
-    return NextResponse.json({ error: "Unknown error", success: false }, { status: 500 });
-  }
-
+  const userId = session.user.id;
   const { message, advisor_id } = await req.json();
 
-  if (!message || !advisor_id) {
+  if (!message || advisor_id == null) {
     return NextResponse.json({ error: "Message and advisor_id are required", success: false }, { status: 400 });
   }
 
-  const { error: messageError } = await supabase.from("messages").insert({
-    advisor_id: advisor_id,
-    user_id: data.user.id,
-    message: message,
-    from_user: true,
+  const advisorId = Number(advisor_id);
+
+  const userMessageResponse = await nhost.graphql.request({
+    query: INSERT_MESSAGE,
+    variables: {
+      object: {
+        advisor_id: advisorId,
+        user_id: userId,
+        message,
+        from_user: true,
+      },
+    },
   });
 
-  if (messageError) {
-    return NextResponse.json({ error: messageError.message }, { status: 500 });
+  const userMessageError = getGraphQLError(userMessageResponse);
+  if (userMessageError) {
+    return NextResponse.json({ error: userMessageError }, { status: 500 });
   }
 
-  // Get last 8 (and the one we just sent) messages for this user and advisor
-  const { data: previousMessages, error: historyError } = await supabase
-    .from("messages")
-    .select("*")
-    .eq("user_id", data.user.id)
-    .eq("advisor_id", advisor_id)
-    .order("created_at", { ascending: false })
-    .limit(9);
+  const historyResponse = await nhost.graphql.request<{ moneyfi_messages: MessageRow[] }>({
+    query: GET_MESSAGE_HISTORY,
+    variables: {
+      advisorId,
+      limit: 9,
+    },
+  });
 
+  const historyError = getGraphQLError(historyResponse);
   if (historyError) {
-    return NextResponse.json({ error: historyError.message }, { status: 500 });
+    return NextResponse.json({ error: historyError }, { status: 500 });
   }
-  // Add system message to describe advisor's persona
-  const { data: advisor } = await supabase.from("advisors").select("*").eq("id", advisor_id).single();
 
+  const advisorResponse = await nhost.graphql.request<{ moneyfi_advisors_by_pk: AdvisorRow | null }>({
+    query: GET_ADVISOR,
+    variables: { id: advisorId },
+  });
+
+  const advisorQueryError = getGraphQLError(advisorResponse);
+  if (advisorQueryError) {
+    return NextResponse.json({ error: advisorQueryError }, { status: 500 });
+  }
+
+  const advisor = advisorResponse.body.data?.moneyfi_advisors_by_pk;
   if (!advisor) {
     return NextResponse.json({ error: "Advisor not found" }, { status: 404 });
   }
+
+  const previousMessages = historyResponse.body.data?.moneyfi_messages ?? [];
 
   const systemMessage: ChatCompletionMessageParam = {
     role: "system",
     content: `You are ${advisor.name}, a financial advisor. ${advisor.persona} Keep your responses concise (less than 50 words) and to the point.`,
   };
 
-  const messages: ChatCompletionMessageParam[] = [systemMessage];
+  const chatMessages: ChatCompletionMessageParam[] = [systemMessage];
 
-  previousMessages.forEach((message) => {
-    messages.push({
-      role: message.from_user ? "user" : "assistant",
-      content: message.message,
+  previousMessages.forEach((row) => {
+    chatMessages.push({
+      role: row.from_user ? "user" : "assistant",
+      content: row.message,
     });
   });
 
   const completion = await openai.chat.completions.create({
-    messages: messages.reverse(),
+    messages: chatMessages.reverse(),
     model: "gpt-4o-mini",
   });
 
@@ -78,43 +107,31 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "No assistant message" }, { status: 500 });
   }
 
-  const audio = await elevenLabs.textToSpeech.convert(advisor.elevenlabs_voice_id, {
-    text: assistantMessage,
-  });
+  let audioUrl: string | null = null;
 
-  // Convert stream to buffer
-  const chunks: Uint8Array[] = [];
-  for await (const chunk of audio) {
-    chunks.push(chunk);
-  }
-  const buffer = Buffer.concat(chunks);
-
-  const { data: audioData, error: audioError } = await supabase.storage
-    .from("advisor_audio")
-    .upload(`${data.user.id}-${advisor_id}-${Date.now()}.mp3`, buffer, {
-      contentType: "audio/mpeg",
-      cacheControl: "3600",
-    });
-
-  if (audioError) {
-    return NextResponse.json({ error: audioError.message }, { status: 500 });
+  try {
+    const buffer = await textToSpeech(advisor.elevenlabs_voice_id, assistantMessage);
+    audioUrl = `data:audio/mpeg;base64,${buffer.toString("base64")}`;
+  } catch (err) {
+    console.error("Failed to generate audio:", err);
   }
 
-  // Get the public URL for the audio
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("advisor_audio").getPublicUrl(audioData?.path || "");
-
-  const { error: assistantMessageError } = await supabase.from("messages").insert({
-    advisor_id: advisor_id,
-    user_id: data.user.id,
-    message: assistantMessage,
-    from_user: false,
-    audio_url: publicUrl,
+  const assistantMessageResponse = await nhost.graphql.request({
+    query: INSERT_MESSAGE,
+    variables: {
+      object: {
+        advisor_id: advisorId,
+        user_id: userId,
+        message: assistantMessage,
+        from_user: false,
+        audio_url: audioUrl,
+      },
+    },
   });
 
+  const assistantMessageError = getGraphQLError(assistantMessageResponse);
   if (assistantMessageError) {
-    return NextResponse.json({ error: assistantMessageError.message }, { status: 500 });
+    return NextResponse.json({ error: assistantMessageError }, { status: 500 });
   }
 
   return NextResponse.json({

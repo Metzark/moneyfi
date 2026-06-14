@@ -1,18 +1,13 @@
-// Advisor type from public.advisors table
+// Advisor type from moneyfi.advisors table
 export type Advisor = {
-  id: string;
+  id: number;
   name: string;
   description: string;
+  full_bio: string;
   image_url: string | null;
 };
 
-// Advisors response type
-export type AdvisorsResponse = {
-  data: Advisor[] | null;
-  error: Error | null;
-};
-
-// Message type from public.messages table
+// Message type from moneyfi.messages table
 export type Message = {
   id: string;
   message: string;

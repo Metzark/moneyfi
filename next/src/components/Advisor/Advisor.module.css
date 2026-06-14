@@ -24,6 +24,12 @@
   height: 125%;
 }
 
+.placeholder {
+  width: 60%;
+  height: 60%;
+  color: var(--green);
+}
+
 .advisorContent {
   padding: 2rem;
   flex: 1;

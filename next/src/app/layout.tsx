@@ -1,7 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import Header from "@/components/Header/Header";
-import { SupabaseProvider } from "@/lib/supabase/context";
 import DollarSignBackground from "@/components/Background/DollarSignBackground";
 import { inter, pacifico } from "@/lib/fonts";
 
@@ -21,11 +20,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${pacifico.variable}`}>
-        <SupabaseProvider>
-          <DollarSignBackground />
-          <Header />
-          {children}
-        </SupabaseProvider>
+        <DollarSignBackground />
+        <Header />
+        {children}
       </body>
     </html>
   );

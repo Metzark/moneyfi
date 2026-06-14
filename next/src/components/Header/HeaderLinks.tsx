@@ -1,30 +1,24 @@
-"use client";
-
+import { createNhostClient } from "@/lib/nhost/server";
+import Link from "next/link";
 import styles from "./HeaderLinks.module.css";
-import { useSupabase } from "@/lib/supabase/context";
-import { SupabaseClient, User } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
 
-export default function HeaderLinks() {
-  const { user, supabase }: { user: User | null; supabase: SupabaseClient } = useSupabase();
-
-  const router = useRouter();
-
-  // Handle logging the user out
-  const handleLogout = async () => {
-    const { error }: { error: Error | null } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Error signing out:", error);
-    }
-
-    router.push("/login");
-  };
+export default async function HeaderLinks() {
+  const nhost = await createNhostClient();
+  const session = nhost.getUserSession();
 
   return (
     <div className={styles.links}>
-      <button className={styles.login} title="Login" onClick={() => (user ? handleLogout() : router.push("/login"))}>
-        {user ? <LogoutIcon /> : <UserIcon />}
-      </button>
+      {session ? (
+        <form action="/api/logout" method="POST">
+          <button className={styles.login} title="Logout" type="submit">
+            <LogoutIcon />
+          </button>
+        </form>
+      ) : (
+        <Link className={styles.login} title="Login" href="/login">
+          <UserIcon />
+        </Link>
+      )}
     </div>
   );
 }

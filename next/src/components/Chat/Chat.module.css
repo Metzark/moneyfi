@@ -122,6 +122,12 @@
   border: 1px solid var(--green);
 }
 
+.error {
+  color: var(--red);
+  font-size: 1.4rem;
+  font-weight: 500;
+}
+
 @media (max-width: 37.5em) {
   .chats ul {
     height: 40rem;

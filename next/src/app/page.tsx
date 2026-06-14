@@ -1,16 +1,26 @@
 import styles from "./page.module.css";
 import Advisor from "@/components/Advisor/Advisor";
-import { createClient } from "@/lib/supabase/server";
+import { GET_ADVISORS, getGraphQLError } from "@/lib/nhost/graphql";
+import { createNhostClient } from "@/lib/nhost/server";
+import { Advisor as AdvisorType } from "@/types/types";
 import Link from "next/link";
 
+type AdvisorsQueryResult = {
+  moneyfi_advisors: AdvisorType[];
+};
+
 export default async function Page() {
-  const supabase = await createClient();
+  const nhost = await createNhostClient();
+  const response = await nhost.graphql.request<AdvisorsQueryResult>({
+    query: GET_ADVISORS,
+  });
 
-  const { data: advisors, error } = await supabase.from("advisors").select("*");
-
+  const error = getGraphQLError(response);
   if (error) {
     console.error(error);
   }
+
+  const advisors = response.body.data?.moneyfi_advisors ?? [];
 
   return (
     <main className={styles.main}>
@@ -42,8 +52,8 @@ export default async function Page() {
       <section className={styles.advisors}>
         <h2>Meet Our Advisors</h2>
         <div className={styles.advisorGrid}>
-          {advisors?.map((advisor) => (
-            <Advisor key={advisor.name} advisor={advisor} />
+          {advisors.map((advisor) => (
+            <Advisor key={advisor.id} advisor={advisor} />
           ))}
         </div>
       </section>

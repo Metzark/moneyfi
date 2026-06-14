@@ -1,64 +1,85 @@
-import { useSupabase } from "@/lib/supabase/context";
+import { getNhostClient } from "@/lib/nhost/client";
+import { GET_MESSAGES, getGraphQLError } from "@/lib/nhost/graphql";
 import { Advisor, Message } from "@/types/types";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+type MessagesQueryResult = {
+  moneyfi_messages: Array<{
+    id: string;
+    message: string;
+    from_user: boolean;
+    audio_url?: string | null;
+  }>;
+};
+
+const POLL_INTERVAL_MS = 2000;
 
 export function useMessages(advisor: Advisor | null) {
-  const { supabase } = useSupabase();
   const [messages, setMessages] = useState<Message[]>([]);
+  const lastMessageIdRef = useRef<string | null>(null);
+  const advisorIdRef = useRef<number | null>(null);
 
-  // Handle fetching messages
-  const handleMessages = useCallback(
-    async (e: any) => {
-      if (!advisor) return;
+  const fetchMessages = useCallback(async () => {
+    if (!advisor) {
+      setMessages([]);
+      return;
+    }
 
-      const { data, error } = await supabase
-        .from("messages")
-        .select("id, message, from_user, audio_url")
-        .eq("advisor_id", advisor?.id)
-        .order("created_at", { ascending: false })
-        .limit(10);
+    try {
+      const nhost = getNhostClient();
+      const response = await nhost.graphql.request<MessagesQueryResult>({
+        query: GET_MESSAGES,
+        variables: {
+          advisorId: advisor.id,
+          limit: 10,
+        },
+      });
 
-      if (error) {
-        console.error(error);
-      } else {
-        const newMessages = data.map((message) => ({ ...message, auto_play: false })).reverse();
-        const lastMessage = newMessages.length > 0 ? newMessages[newMessages.length - 1] : null;
+      const graphqlError = getGraphQLError(response);
+      if (graphqlError) {
+        console.error(graphqlError);
+        return;
+      }
 
-        if (lastMessage?.audio_url && lastMessage.id === e?.new.id) {
+      const rows = response.body.data?.moneyfi_messages ?? [];
+      const newMessages = rows
+        .map((message) => ({ ...message, audio_url: message.audio_url ?? undefined, auto_play: false }))
+        .reverse();
+
+      const lastMessage = newMessages.length > 0 ? newMessages[newMessages.length - 1] : null;
+      const switchedAdvisor = advisorIdRef.current !== advisor.id;
+
+      if (switchedAdvisor) {
+        advisorIdRef.current = advisor.id;
+        lastMessageIdRef.current = lastMessage?.id ?? null;
+      } else if (lastMessage && lastMessageIdRef.current && lastMessage.id !== lastMessageIdRef.current) {
+        if (lastMessage.audio_url && !lastMessage.from_user) {
           lastMessage.auto_play = true;
         }
-
-        setMessages(newMessages);
+        lastMessageIdRef.current = lastMessage.id;
+      } else if (lastMessage && !lastMessageIdRef.current) {
+        lastMessageIdRef.current = lastMessage.id;
       }
-    },
-    [supabase, advisor]
-  );
 
-  // Handle subscribing to messages
+      setMessages(newMessages);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [advisor]);
+
   useEffect(() => {
-    const channel = supabase
-      .channel("messages")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "messages",
-          filter: `advisor_id=eq.${advisor?.id}`,
-        },
-        handleMessages
-      )
-      .subscribe();
+    if (!advisor) {
+      advisorIdRef.current = null;
+      lastMessageIdRef.current = null;
+      setMessages([]);
+      return;
+    }
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase, advisor, handleMessages]);
+    fetchMessages();
 
-  // Handle fetching messages initially or when advisor changes
-  useEffect(() => {
-    handleMessages(null);
-  }, [handleMessages]);
+    const interval = setInterval(fetchMessages, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [advisor, fetchMessages]);
 
   return messages;
 }
