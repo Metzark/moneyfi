@@ -1,0 +1,3 @@
+moneyfi.metzark.com {
+	reverse_proxy localhost:3000
+}

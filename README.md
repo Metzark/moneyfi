@@ -6,6 +6,7 @@ An AI financial advising service powered by Next.js, Nhost, OpenAI, and ElevenLa
 
 - `nhost/` — Backend (Postgres, Auth, Hasura GraphQL) and database migrations
 - `next/` — Next.js frontend
+- `deploy/` — Production reverse-proxy config and setup scripts
 
 ## Development
 
@@ -87,3 +88,52 @@ npm run dev
 ```
 
 The app will be available at [http://localhost:3000](http://localhost:3000).
+
+## Production
+
+### Requirements
+
+- Ubuntu 24.04 LTS server
+- DNS **A record** for `moneyfi.metzark.com` pointing at the server’s public IP
+- AWS security group allowing inbound **TCP 80** and **TCP 443**
+- Node.js and a production build of the Next.js app (see below)
+
+### Reverse Proxy (Caddy)
+
+Caddy terminates HTTPS for `moneyfi.metzark.com` and forwards traffic to Next.js on `localhost:3000`. Certificates are obtained and renewed automatically via Let’s Encrypt.
+
+From the repo root on the server:
+
+```bash
+sudo ./deploy/setup-caddy.sh
+```
+
+The script installs Caddy from the official repository, copies `deploy/Caddyfile` to `/etc/caddy/Caddyfile`, validates the config, and starts the service.
+
+Check status or logs:
+
+```bash
+sudo systemctl status caddy
+sudo journalctl -u caddy -f
+```
+
+Re-run the script after updating `deploy/Caddyfile` to redeploy config changes.
+
+### Running Next.js in Production
+
+Build and start the app on the same host as Caddy:
+
+```bash
+cd next
+npm ci
+npm run build
+npm start
+```
+
+The app listens on port 3000 by default. Caddy proxies public HTTPS traffic to it.
+
+Verify the site:
+
+```bash
+curl -I https://moneyfi.metzark.com
+```
