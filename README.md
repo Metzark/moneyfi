@@ -96,41 +96,58 @@ The app will be available at [http://localhost:3000](http://localhost:3000).
 - Ubuntu 24.04 LTS server
 - DNS **A record** for `moneyfi.metzark.com` pointing at the server’s public IP
 - AWS security group allowing inbound **TCP 80** and **TCP 443**
-- Node.js and a production build of the Next.js app (see below)
+- Nhost project region and subdomain (hosted Nhost, not local Docker)
+- OpenAI and ElevenLabs API keys
 
-### Reverse Proxy (Caddy)
+### One-command deploy
 
-Caddy terminates HTTPS for `moneyfi.metzark.com` and forwards traffic to Next.js on `localhost:3000`. Certificates are obtained and renewed automatically via Let’s Encrypt.
-
-From the repo root on the server:
+SSH into the server, clone the repo, and run the setup script:
 
 ```bash
-sudo ./deploy/setup-caddy.sh
+git clone <repo-url> moneyfi
+cd moneyfi
+sudo ./deploy/setup.sh
 ```
 
-The script installs Caddy from the official repository, copies `deploy/Caddyfile` to `/etc/caddy/Caddyfile`, validates the config, and starts the service.
+The script will:
 
-Check status or logs:
+1. Prompt for environment variables and write `next/.env.local`
+2. Install Node.js 22, PM2, and Caddy
+3. Build the Next.js app and run it under PM2 on port 3000
+4. Configure Caddy to serve `https://moneyfi.metzark.com` with automatic HTTPS
+
+Re-run the same command after pulling updates to rebuild, restart the app, and refresh config.
+
+### Environment variables
+
+You will be prompted for:
+
+| Variable | Description |
+| --- | --- |
+| `NHOST_REGION` | Nhost project region (e.g. `us-east-1`) |
+| `NHOST_SUBDOMAIN` | Nhost project subdomain |
+| `OPENAI_API_KEY` | OpenAI API key |
+| `ELEVENLABS_API_URL` | ElevenLabs API base URL (default: `https://api.us.elevenlabs.io/v1`) |
+| `ELEVENLABS_API_KEY` | ElevenLabs API key |
+
+`NEXT_PUBLIC_NHOST_REGION` and `NEXT_PUBLIC_NHOST_SUBDOMAIN` are set automatically from the Nhost values above.
+
+### Operations
+
+App status and logs:
+
+```bash
+pm2 status
+pm2 logs moneyfi
+pm2 restart moneyfi
+```
+
+Caddy status and logs:
 
 ```bash
 sudo systemctl status caddy
 sudo journalctl -u caddy -f
 ```
-
-Re-run the script after updating `deploy/Caddyfile` to redeploy config changes.
-
-### Running Next.js in Production
-
-Build and start the app on the same host as Caddy:
-
-```bash
-cd next
-npm ci
-npm run build
-npm start
-```
-
-The app listens on port 3000 by default. Caddy proxies public HTTPS traffic to it.
 
 Verify the site:
 
